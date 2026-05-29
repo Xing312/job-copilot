@@ -7,9 +7,10 @@ import ApplicationDetail from './pages/ApplicationDetail'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import { isLoggedIn } from './auth'
+import { isDemoMode } from './demo'
 
 function Guard({ children }) {
-  return isLoggedIn() ? children : <Navigate to="/login" replace />
+  return (isLoggedIn() || isDemoMode()) ? children : <Navigate to="/login" replace />
 }
 
 export default function App() {

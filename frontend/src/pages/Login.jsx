@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../api/applications'
 import { setToken } from '../auth'
+import { enterDemo } from '../demo'
 
 export default function Login() {
   const [password, setPassword] = useState('')
@@ -24,12 +25,19 @@ export default function Login() {
     }
   }
 
+  function handleDemo() {
+    enterDemo()
+    navigate('/applications')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 w-full max-w-sm shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Job Copilot</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your password to continue</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          Personal job application tracker with AI-powered auto-fill.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="password"
             value={password}
@@ -47,6 +55,17 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+          <button
+            onClick={handleDemo}
+            className="w-full py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            Try Demo
+          </button>
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
+            Sample data — no sign-in required
+          </p>
+        </div>
       </div>
     </div>
   )
