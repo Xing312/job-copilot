@@ -30,7 +30,7 @@ export default function NavBar() {
       {demo && (
         <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700 px-6 py-2 flex items-center justify-between text-sm">
           <span className="text-amber-800 dark:text-amber-300">
-            Demo mode — sample data only. Sign in to track your real applications.
+            Demo mode — changes are temporary and reset on refresh. Sign in to save real data.
           </span>
           <button
             onClick={handleExitDemo}

@@ -1,9 +1,14 @@
 export const DEMO_KEY = 'jc_demo'
+export const DEMO_STORE_KEY = 'jc_demo_apps'
+
 export const isDemoMode = () => localStorage.getItem(DEMO_KEY) === 'true'
 export const enterDemo = () => localStorage.setItem(DEMO_KEY, 'true')
-export const exitDemo = () => localStorage.removeItem(DEMO_KEY)
+export const exitDemo = () => {
+  localStorage.removeItem(DEMO_KEY)
+  sessionStorage.removeItem(DEMO_STORE_KEY)
+}
 
-export const DEMO_APPS = [
+const DEMO_APPS_SEED = [
   {
     id: 1, company: 'Anthropic', title: 'Research Engineer, Interpretability',
     location: 'San Francisco, CA', salary_min: 180000, salary_max: 250000,
@@ -42,36 +47,105 @@ export const DEMO_APPS = [
   },
 ]
 
-export const DEMO_STATS = {
-  total: DEMO_APPS.length,
-  offers: 0,
-  interviews: 1,
-  response_rate: 66.7,
-  by_status: [
-    { name: 'Applied', value: 1 },
-    { name: 'OA', value: 1 },
-    { name: 'Phone Screen', value: 1 },
-    { name: 'Interview', value: 1 },
-    { name: 'Rejected', value: 1 },
-    { name: 'Ghosted', value: 1 },
-  ],
-  by_week: [
-    ...Array.from({ length: 8 }, (_, i) => ({ week: `0${i + 1}/01`, count: 0 })),
-    { week: '04/20', count: 1 },
-    { week: '04/27', count: 1 },
-    { week: '05/04', count: 2 },
-    { week: '05/11', count: 2 },
-  ],
-  by_platform: [
-    { name: 'Greenhouse', value: 2 },
-    { name: 'LinkedIn', value: 1 },
-    { name: 'Lever', value: 1 },
-    { name: 'Company Site', value: 1 },
-    { name: 'Ashby', value: 1 },
-  ],
-  by_work_type: [
-    { name: 'Hybrid', value: 3 },
-    { name: 'Onsite', value: 2 },
-    { name: 'Remote', value: 1 },
-  ],
+// ── Session store ──────────────────────────────────────────────────────────
+
+export function getDemoApps() {
+  const raw = sessionStorage.getItem(DEMO_STORE_KEY)
+  return raw ? JSON.parse(raw) : [...DEMO_APPS_SEED]
+}
+
+function saveDemoApps(apps) {
+  sessionStorage.setItem(DEMO_STORE_KEY, JSON.stringify(apps))
+}
+
+function nextId() {
+  const apps = getDemoApps()
+  return apps.length ? Math.max(...apps.map((a) => a.id)) + 1 : 1
+}
+
+export function addDemoApp(data) {
+  const apps = getDemoApps()
+  const app = {
+    ...data,
+    id: nextId(),
+    status: data.status || 'Applied',
+    created_at: new Date().toISOString(),
+    updated_at: null,
+  }
+  saveDemoApps([app, ...apps])
+  return app
+}
+
+export function updateDemoApp(id, data) {
+  const apps = getDemoApps()
+  const app = { ...apps.find((a) => a.id === id), ...data, updated_at: new Date().toISOString() }
+  saveDemoApps(apps.map((a) => (a.id === id ? app : a)))
+  return app
+}
+
+export function updateDemoStatus(id, status) {
+  return updateDemoApp(id, { status })
+}
+
+export function deleteDemoApp(id) {
+  saveDemoApps(getDemoApps().filter((a) => a.id !== id))
+}
+
+// ── Stats calculation ──────────────────────────────────────────────────────
+
+const STATUS_ORDER = ['Applied', 'OA', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Ghosted']
+
+function weekMonday(date) {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return d
+}
+
+function fmtWeek(date) {
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${m}/${d}`
+}
+
+export function calcDemoStats() {
+  const apps = getDemoApps()
+  const total = apps.length
+
+  const statusCount = {}
+  const platformCount = {}
+  const workCount = {}
+  const weekCount = {}
+
+  for (const a of apps) {
+    statusCount[a.status] = (statusCount[a.status] || 0) + 1
+    if (a.platform) platformCount[a.platform] = (platformCount[a.platform] || 0) + 1
+    if (a.work_type) workCount[a.work_type] = (workCount[a.work_type] || 0) + 1
+    const d = a.applied_date ? new Date(a.applied_date) : a.created_at ? new Date(a.created_at) : null
+    if (d) {
+      const key = fmtWeek(weekMonday(d))
+      weekCount[key] = (weekCount[key] || 0) + 1
+    }
+  }
+
+  const today = new Date()
+  const by_week = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(d.getDate() - (11 - i) * 7)
+    const key = fmtWeek(weekMonday(d))
+    return { week: key, count: weekCount[key] || 0 }
+  })
+
+  const responded = apps.filter((a) => !['Applied', 'Ghosted'].includes(a.status)).length
+
+  return {
+    total,
+    offers: statusCount['Offer'] || 0,
+    interviews: statusCount['Interview'] || 0,
+    response_rate: total ? Math.round((responded / total) * 1000) / 10 : 0,
+    by_status: STATUS_ORDER.filter((s) => statusCount[s]).map((s) => ({ name: s, value: statusCount[s] })),
+    by_week,
+    by_platform: Object.entries(platformCount).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value })),
+    by_work_type: Object.entries(workCount).map(([name, value]) => ({ name, value })),
+  }
 }
