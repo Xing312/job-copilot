@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { login } from '../api/applications'
-import { setToken } from '../auth'
-import { enterDemo } from '../demo'
+import { isLoggedIn, setToken } from '../auth'
+import { enterDemo, isDemoMode } from '../demo'
 
 export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  if (isLoggedIn() || isDemoMode()) return <Navigate to="/applications" replace />
 
   async function handleSubmit(e) {
     e.preventDefault()
