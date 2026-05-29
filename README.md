@@ -2,6 +2,10 @@
 
 A personal job application tracker with auto-fill from job postings, status tracking, and a stats dashboard.
 
+**Live demo:** https://job-copilot-frontend.onrender.com
+
+**Live demo:** https://job-copilot-frontend.onrender.com
+
 ![CI](https://github.com/Xing312/job-copilot/actions/workflows/ci.yml/badge.svg)
 
 ## Features
