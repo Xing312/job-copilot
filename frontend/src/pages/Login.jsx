@@ -25,10 +25,10 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white border border-gray-200 rounded-xl p-8 w-full max-w-sm shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Job Copilot</h1>
-        <p className="text-sm text-gray-500 mb-6">Enter your password to continue</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 w-full max-w-sm shadow-sm">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Job Copilot</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your password to continue</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="password"
@@ -36,9 +36,9 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             autoFocus
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <button
             type="submit"
             disabled={loading || !password}

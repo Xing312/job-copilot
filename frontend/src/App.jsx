@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import Applications from './pages/Applications'
@@ -12,12 +13,19 @@ function Guard({ children }) {
 }
 
 export default function App() {
+  // Apply saved theme on first load
+  useEffect(() => {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/*" element={
         <Guard>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <NavBar />
             <Routes>
               <Route path="/" element={<Navigate to="/applications" replace />} />

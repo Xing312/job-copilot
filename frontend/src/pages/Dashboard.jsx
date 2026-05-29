@@ -26,20 +26,20 @@ const PLATFORM_COLORS = [
   '#6366f1','#a855f7','#06b6d4','#f59e0b','#22c55e','#ef4444',
 ]
 
-function StatCard({ label, value, sub, color = 'text-gray-900' }) {
+function StatCard({ label, value, sub, color = 'text-gray-900 dark:text-gray-100' }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
       <p className={`text-3xl font-bold ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{sub}</p>}
     </div>
   )
 }
 
 function ChartCard({ title, children }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <p className="text-sm font-semibold text-gray-700 mb-4">{title}</p>
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">{title}</p>
       {children}
     </div>
   )
@@ -67,9 +67,9 @@ export default function Dashboard() {
   }, [])
 
   if (error) return <p className="p-8 text-red-600">{error}</p>
-  if (!data) return <p className="p-8 text-gray-400">Loading…</p>
+  if (!data) return <p className="p-8 text-gray-400 dark:text-gray-500">Loading…</p>
   if (data.total === 0) return (
-    <div className="max-w-2xl mx-auto mt-20 text-center text-gray-400">
+    <div className="max-w-2xl mx-auto mt-20 text-center text-gray-400 dark:text-gray-500">
       <p className="text-lg">No applications yet.</p>
       <p className="text-sm mt-1">Add some applications to see your stats.</p>
     </div>
@@ -77,7 +77,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -117,10 +117,10 @@ export default function Dashboard() {
         <ChartCard title="Applications per Week (last 12 weeks)">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={data.by_week} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} interval={1} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} />
+              <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'currentColor' }} interval={1} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'currentColor' }} />
+              <Tooltip contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', border: '1px solid #e5e7eb', borderRadius: 8 }} />
               <Bar dataKey="count" name="Applications" fill="#6366f1" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

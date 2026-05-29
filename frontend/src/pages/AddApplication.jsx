@@ -22,7 +22,7 @@ const emptyForm = {
 function Field({ label, children, required }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
@@ -31,7 +31,7 @@ function Field({ label, children, required }) {
 }
 
 const inputClass =
-  'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
+  'w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
 
 export default function AddApplication() {
   const [form, setForm] = useState(emptyForm)
@@ -109,8 +109,8 @@ export default function AddApplication() {
     return (
       <div className="max-w-lg mx-auto mt-20 text-center">
         <div className="text-5xl mb-4">✅</div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Application saved!</h2>
-        <p className="text-gray-500 mb-6">{form.title} @ {form.company}</p>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">Application saved!</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">{form.title} @ {form.company}</p>
         <div className="flex justify-center gap-3">
           <button
             onClick={() => { setForm(emptyForm); setPasteInput(''); setFilledFields([]); setExtractError(null); setSuccess(false) }}
@@ -120,7 +120,7 @@ export default function AddApplication() {
           </button>
           <button
             onClick={() => navigate('/applications')}
-            className="px-4 py-2 rounded-md border border-gray-300 text-sm hover:bg-gray-50"
+            className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             View all
           </button>
@@ -131,17 +131,17 @@ export default function AddApplication() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Add Application</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Add Application</h1>
 
       {/* Auto-fill section */}
-      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+      <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-medium text-indigo-800">Auto-fill from job posting</p>
+          <p className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Auto-fill from job posting</p>
           {inputType && (
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               inputType === 'url'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-green-100 text-green-700'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
             }`}>
               {inputType === 'url' ? '🔗 URL' : '📄 JD Text'}
             </span>
@@ -152,17 +152,13 @@ export default function AddApplication() {
           onChange={(e) => setPasteInput(e.target.value)}
           placeholder="Paste a job URL or full job description…"
           rows={isUrl ? 2 : 4}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none mb-2"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none mb-2"
         />
         <div className="flex items-center justify-between">
           <div>
-            {extractError && (
-              <p className="text-xs text-red-600">{extractError}</p>
-            )}
+            {extractError && <p className="text-xs text-red-600 dark:text-red-400">{extractError}</p>}
             {filledFields.length > 0 && (
-              <p className="text-xs text-indigo-700">
-                Filled: {filledFields.join(', ')}
-              </p>
+              <p className="text-xs text-indigo-700 dark:text-indigo-400">Filled: {filledFields.join(', ')}</p>
             )}
           </div>
           <button

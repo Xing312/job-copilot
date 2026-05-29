@@ -7,19 +7,19 @@ const PLATFORMS = ['LinkedIn', 'Greenhouse', 'Lever', 'Workday', 'Company Site',
 const STATUSES = ['Applied', 'OA', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Ghosted']
 
 const inputClass =
-  'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
+  'w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
 
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
       {children}
     </div>
   )
 }
 
 function ReadValue({ value }) {
-  return <p className="text-sm text-gray-900 py-2">{value || <span className="text-gray-400">—</span>}</p>
+  return <p className="text-sm text-gray-900 dark:text-gray-100 py-2">{value || <span className="text-gray-400 dark:text-gray-500">—</span>}</p>
 }
 
 export default function ApplicationDetail() {
@@ -93,32 +93,32 @@ export default function ApplicationDetail() {
     }
   }
 
-  if (loading) return <p className="p-8 text-gray-500">Loading…</p>
+  if (loading) return <p className="p-8 text-gray-500 dark:text-gray-400">Loading…</p>
   if (error) return <p className="p-8 text-red-500">{error}</p>
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <button onClick={() => navigate('/applications')} className="text-sm text-gray-500 hover:text-gray-700 mb-1">
+          <button onClick={() => navigate('/applications')} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-1">
             ← Back
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">{app.title}</h1>
-          <p className="text-gray-500 text-sm">{app.company}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{app.title}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{app.company}</p>
         </div>
         <div className="flex gap-2">
           {!editing && (
             <>
               <button
                 onClick={() => setEditing(true)}
-                className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+                className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="px-4 py-2 text-sm rounded-md border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                className="px-4 py-2 text-sm rounded-md border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
               >
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>
@@ -127,25 +127,19 @@ export default function ApplicationDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-5">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <Field label="Company">
-            {editing
-              ? <input className={inputClass} value={form.company} onChange={set('company')} required />
-              : <ReadValue value={app.company} />}
+            {editing ? <input className={inputClass} value={form.company} onChange={set('company')} required /> : <ReadValue value={app.company} />}
           </Field>
           <Field label="Job Title">
-            {editing
-              ? <input className={inputClass} value={form.title} onChange={set('title')} required />
-              : <ReadValue value={app.title} />}
+            {editing ? <input className={inputClass} value={form.title} onChange={set('title')} required /> : <ReadValue value={app.title} />}
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Location">
-            {editing
-              ? <input className={inputClass} value={form.location} onChange={set('location')} />
-              : <ReadValue value={app.location} />}
+            {editing ? <input className={inputClass} value={form.location} onChange={set('location')} /> : <ReadValue value={app.location} />}
           </Field>
           <Field label="Work Type">
             {editing
@@ -159,14 +153,10 @@ export default function ApplicationDetail() {
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Salary Min ($)">
-            {editing
-              ? <input type="number" className={inputClass} value={form.salary_min} onChange={set('salary_min')} />
-              : <ReadValue value={app.salary_min} />}
+            {editing ? <input type="number" className={inputClass} value={form.salary_min} onChange={set('salary_min')} /> : <ReadValue value={app.salary_min} />}
           </Field>
           <Field label="Salary Max ($)">
-            {editing
-              ? <input type="number" className={inputClass} value={form.salary_max} onChange={set('salary_max')} />
-              : <ReadValue value={app.salary_max} />}
+            {editing ? <input type="number" className={inputClass} value={form.salary_max} onChange={set('salary_max')} /> : <ReadValue value={app.salary_max} />}
           </Field>
         </div>
 
@@ -180,9 +170,7 @@ export default function ApplicationDetail() {
               : <ReadValue value={app.platform} />}
           </Field>
           <Field label="Applied Date">
-            {editing
-              ? <input type="date" className={inputClass} value={form.applied_date} onChange={set('applied_date')} />
-              : <ReadValue value={app.applied_date} />}
+            {editing ? <input type="date" className={inputClass} value={form.applied_date} onChange={set('applied_date')} /> : <ReadValue value={app.applied_date} />}
           </Field>
         </div>
 
@@ -190,7 +178,7 @@ export default function ApplicationDetail() {
           {editing
             ? <input className={inputClass} value={form.source_url} onChange={set('source_url')} placeholder="https://…" />
             : app.source_url
-              ? <a href={app.source_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:underline py-2 block">{app.source_url}</a>
+              ? <a href={app.source_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline py-2 block">{app.source_url}</a>
               : <ReadValue value={null} />}
         </Field>
 
@@ -204,16 +192,12 @@ export default function ApplicationDetail() {
 
         {editing && (
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50"
-            >
+            <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50">
               {saving ? 'Saving…' : 'Save Changes'}
             </button>
             <button
               onClick={() => { setForm(toForm(app)); setEditing(false) }}
-              className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Cancel
             </button>
