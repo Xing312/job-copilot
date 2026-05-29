@@ -1,0 +1,82 @@
+const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000') + '/api'
+
+const HEADERS = {
+  'Content-Type': 'application/json',
+  ...(import.meta.env.VITE_API_KEY ? { 'X-API-Key': import.meta.env.VITE_API_KEY } : {}),
+}
+
+export async function getApplications() {
+  const res = await fetch(`${BASE}/applications`, { headers: HEADERS })
+  if (!res.ok) throw new Error('Failed to fetch applications')
+  return res.json()
+}
+
+export async function createApplication(data) {
+  const res = await fetch(`${BASE}/applications`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to create application')
+  return res.json()
+}
+
+export async function getApplication(id) {
+  const res = await fetch(`${BASE}/applications/${id}`, { headers: HEADERS })
+  if (!res.ok) throw new Error('Application not found')
+  return res.json()
+}
+
+export async function updateStatus(id, status) {
+  const res = await fetch(`${BASE}/applications/${id}/status`, {
+    method: 'PATCH',
+    headers: HEADERS,
+    body: JSON.stringify({ status }),
+  })
+  if (!res.ok) throw new Error('Failed to update status')
+  return res.json()
+}
+
+export async function updateApplication(id, data) {
+  const res = await fetch(`${BASE}/applications/${id}`, {
+    method: 'PUT',
+    headers: HEADERS,
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to update application')
+  return res.json()
+}
+
+export async function deleteApplication(id) {
+  const res = await fetch(`${BASE}/applications/${id}`, {
+    method: 'DELETE',
+    headers: HEADERS,
+  })
+  if (!res.ok) throw new Error('Failed to delete application')
+}
+
+export async function extractFromUrl(url) {
+  const res = await fetch(`${BASE}/extract`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify({ url }),
+  })
+  if (!res.ok) throw new Error('Failed to extract from URL')
+  return res.json()
+}
+
+export async function extractFromText(text) {
+  const res = await fetch(`${BASE}/extract`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify({ text }),
+  })
+  if (!res.ok) throw new Error('Failed to extract from text')
+  return res.json()
+}
+
+export async function getStats() {
+  const res = await fetch(`${BASE}/stats`, { headers: HEADERS })
+  if (!res.ok) throw new Error('Failed to fetch stats')
+  return res.json()
+}

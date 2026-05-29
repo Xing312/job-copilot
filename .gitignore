@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Env
+.env
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# DB
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log
+
+# Dev log (local only)
+DEVLOG.md
+
+# spaCy training artifacts (generated, not needed in repo)
+corpus/train.spacy
+corpus/dev.spacy
+corpus/base_config.cfg
+
+# Trained model is committed intentionally (corpus/job_copilot_ner/)
+
+# Render / deploy
+models/
+
+# Claude Code internal instructions (not for public repo)
+CLAUDE.md
+
+# Personal planning docs
+"job_copilot_project_brief (1).md"
+job_copilot_project_brief*.md
+websites.md
+
+# Training data with personal URLs
+scripts/training_candidates.json
+"Copy of JOB APPLICATION TEMPLATE*"
