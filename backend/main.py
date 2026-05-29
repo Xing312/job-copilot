@@ -31,7 +31,7 @@ app.add_middleware(
 _LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "")
 _JWT_SECRET = os.getenv("JWT_SECRET", _LOGIN_PASSWORD)
 
-_PUBLIC_PATHS = {"/api/auth/login"}
+_PUBLIC_PATHS = {"/api/auth/login", "/api/extract"}
 
 
 @app.middleware("http")
