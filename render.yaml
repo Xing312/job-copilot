@@ -20,8 +20,6 @@ services:
   - type: web
     name: job-copilot-frontend
     runtime: static
-    region: oregon
-    plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
