@@ -36,7 +36,7 @@ corpus/base_config.cfg
 # Trained model is committed intentionally (corpus/job_copilot_ner/)
 
 # Render / deploy
-models/
+/models/
 
 # Claude Code internal instructions (not for public repo)
 CLAUDE.md
