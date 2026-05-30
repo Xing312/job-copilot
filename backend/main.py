@@ -9,8 +9,9 @@ import jwt
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
 import models.application  # noqa: F401 — registers model with Base
-from api import applications, extract, stats, auth
+from api import applications, auth, extract, stats
 
 app = FastAPI(title="Job Copilot API")
 

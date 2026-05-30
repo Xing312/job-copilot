@@ -1,0 +1,14 @@
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import order)
+    "UP",  # pyupgrade (modern Python syntax)
+]
+ignore = [
+    "E501",  # line too long — not worth fighting in docstrings/URLs
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["F401"]           # unused imports in test helpers are fine
+"tests/conftest.py" = ["I001", "E402"]  # intentional import order: env vars set before project imports

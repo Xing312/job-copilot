@@ -1,6 +1,6 @@
 DC = docker compose
 
-.PHONY: start stop restart logs train test migrate migration stamp
+.PHONY: start stop restart logs train test lint migrate migration stamp
 
 start:
 	$(DC) up -d
@@ -19,6 +19,9 @@ train:
 
 test:
 	$(DC) exec backend sh -c "pip install -q pytest httpx && pytest tests/ -v"
+
+lint:
+	$(DC) exec backend sh -c "pip install -q ruff && ruff check ."
 
 # Apply all pending migrations
 migrate:

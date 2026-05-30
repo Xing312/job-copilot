@@ -31,15 +31,15 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: backend/requirements.txt
-      - run: pip install -r requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-test.txt
+      - run: pip install -r requirements.txt -r requirements-test.txt ruff
         working-directory: backend
+      - name: Lint
+        working-directory: backend
+        run: ruff check .
       - run: python -m spacy download en_core_web_sm
-      - name: Syntax check
+      - name: Run tests
         working-directory: backend
-        run: |
-          python -m py_compile main.py
-          python -m py_compile services/extractor.py
-          python -m py_compile api/applications.py
-          python -m py_compile api/extract.py
-          python -m py_compile api/stats.py
+        run: pytest tests/ -v

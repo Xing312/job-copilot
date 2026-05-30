@@ -3,13 +3,14 @@ import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 
 # Ensure backend/ is on path so models and db can be imported
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from db.database import Base
 import models.application  # noqa: F401 — registers Application with Base
+from db.database import Base
 
 config = context.config
 

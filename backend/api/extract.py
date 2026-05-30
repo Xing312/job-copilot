@@ -1,26 +1,31 @@
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
 
-from services.extractor import fetch_jsonld, fetch_text_from_url, detect_platform, extract_fields
+from services.extractor import (
+    detect_platform,
+    extract_fields,
+    fetch_jsonld,
+    fetch_text_from_url,
+)
 
 router = APIRouter()
 
 
 class ExtractRequest(BaseModel):
-    url: Optional[str] = None
-    text: Optional[str] = None
+    url: str | None = None
+    text: str | None = None
 
 
 class ExtractResponse(BaseModel):
-    title: Optional[str] = None
-    company: Optional[str] = None
-    location: Optional[str] = None
-    salary_min: Optional[int] = None
-    salary_max: Optional[int] = None
-    work_type: Optional[str] = None
-    platform: Optional[str] = None
-    source_url: Optional[str] = None
+    title: str | None = None
+    company: str | None = None
+    location: str | None = None
+    salary_min: int | None = None
+    salary_max: int | None = None
+    work_type: str | None = None
+    platform: str | None = None
+    source_url: str | None = None
 
 
 @router.post("/extract", response_model=ExtractResponse)

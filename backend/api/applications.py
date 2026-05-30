@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import Optional
 from datetime import date, datetime
 from decimal import Decimal
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from db.database import get_db
 from models.application import Application
@@ -16,30 +16,30 @@ VALID_STATUSES = {"Applied", "OA", "Phone Screen", "Interview", "Offer", "Reject
 class ApplicationCreate(BaseModel):
     company: str
     title: str
-    location: Optional[str] = None
-    salary_min: Optional[Decimal] = None
-    salary_max: Optional[Decimal] = None
-    work_type: Optional[str] = None
-    platform: Optional[str] = None
-    source_url: Optional[str] = None
-    applied_date: Optional[date] = None
-    status: Optional[str] = "Applied"
+    location: str | None = None
+    salary_min: Decimal | None = None
+    salary_max: Decimal | None = None
+    work_type: str | None = None
+    platform: str | None = None
+    source_url: str | None = None
+    applied_date: date | None = None
+    status: str | None = "Applied"
 
 
 class ApplicationOut(BaseModel):
     id: int
     company: str
     title: str
-    location: Optional[str]
-    salary_min: Optional[Decimal]
-    salary_max: Optional[Decimal]
-    work_type: Optional[str]
-    platform: Optional[str]
-    source_url: Optional[str]
-    applied_date: Optional[date]
+    location: str | None
+    salary_min: Decimal | None
+    salary_max: Decimal | None
+    work_type: str | None
+    platform: str | None
+    source_url: str | None
+    applied_date: date | None
     status: str
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
+    created_at: datetime | None
+    updated_at: datetime | None
 
     model_config = {"from_attributes": True}
 
