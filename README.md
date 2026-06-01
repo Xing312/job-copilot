@@ -117,3 +117,11 @@ To retrain after adding annotations to `corpus/annotations.json`:
 make train
 make restart
 ```
+
+## License
+
+MIT © [Xing312](https://github.com/Xing312)
+
+## License
+
+MIT © [Xing312](https://github.com/Xing312)
