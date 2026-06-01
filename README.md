@@ -9,7 +9,8 @@ A personal job application tracker with auto-fill from job postings, status trac
 ## Features
 
 - **Auto-fill** — paste a job URL or raw JD text; the app extracts title, company, location, salary, and work type automatically
-- **Extraction pipeline** — JSON-LD structured data → Jina Reader → custom spaCy NER model fine-tuned on real job postings
+- **LLM extraction** — optional Groq (llama-3.3-70b) pass improves accuracy; falls back to regex + custom spaCy NER when unavailable
+- **Extraction pipeline** — JSON-LD structured data → Jina Reader → LLM → spaCy NER (cascading fallbacks)
 - **Application tracking** — add, edit, delete applications; update status with one click
 - **Dashboard** — status breakdown, weekly application trend, platform and work-type distribution (Recharts)
 - **API key auth** — simple header-based protection for personal deployments
@@ -20,7 +21,7 @@ A personal job application tracker with auto-fill from job postings, status trac
 |-------|-----------|
 | Frontend | React 18, Vite, Tailwind CSS, Recharts |
 | Backend | FastAPI, SQLAlchemy, Python 3.12 |
-| NLP | spaCy 3 (custom NER fine-tuned from `en_core_web_sm`) |
+| NLP | spaCy 3 (custom NER) + Groq LLM (optional) |
 | Database | PostgreSQL 16 |
 | Infrastructure | Docker Compose, GitHub Actions, Render |
 
@@ -46,12 +47,21 @@ make start      # start all services in background
 make stop       # stop all services
 make restart    # restart backend (after Python changes)
 make logs       # tail backend logs
+make test       # run pytest suite inside the backend container
 make train      # retrain the custom spaCy NER model
 ```
 
 ### Environment variables
 
 Copy `.env.example` to `.env` to customise database credentials. API key auth is **disabled by default** in local dev (set `API_KEY` to enable).
+
+To enable LLM-based extraction, add your Groq API key (free tier at [console.groq.com](https://console.groq.com)):
+
+```
+GROQ_API_KEY=gsk_...
+```
+
+If `GROQ_API_KEY` is empty, the pipeline silently skips the LLM step and uses regex + spaCy.
 
 ## Deployment (Render)
 
@@ -65,6 +75,7 @@ This repo includes a `render.yaml` Blueprint for one-click deployment.
 | Service | Variable | Value |
 |---------|----------|-------|
 | backend | `FRONTEND_URL` | `https://job-copilot-frontend.onrender.com` |
+| backend | `GROQ_API_KEY` | *(optional — get a free key at console.groq.com)* |
 | frontend | `VITE_API_URL` | `https://job-copilot-backend.onrender.com` |
 | frontend | `VITE_API_KEY` | *(copy the auto-generated `API_KEY` from backend)* |
 
@@ -76,10 +87,11 @@ This repo includes a `render.yaml` Blueprint for one-click deployment.
 
 ```
 ├── backend/
-│   ├── api/            # FastAPI routers (applications, extract, stats)
+│   ├── api/            # FastAPI routers (applications, extract, stats, auth)
 │   ├── db/             # SQLAlchemy engine and session
 │   ├── models/         # ORM models
-│   └── services/       # Extraction logic (extractor.py)
+│   ├── services/       # extractor.py (regex/NER), llm_extractor.py (Groq)
+│   └── tests/          # pytest suite (SQLite in-memory)
 ├── corpus/
 │   ├── annotations.json        # NER training data (107 examples)
 │   ├── job_copilot_ner/        # Trained spaCy model
@@ -97,7 +109,7 @@ This repo includes a `render.yaml` Blueprint for one-click deployment.
 
 ## NER Model
 
-The custom NER model is fine-tuned from `en_core_web_sm` to recognise `JOB_TITLE` (F=0.81) and `COMPANY` (F=0.28) entities in job posting text. It acts as a fallback when the structured extraction (JSON-LD / title-line regex) does not find a value.
+The custom NER model is fine-tuned from `en_core_web_sm` to recognise `JOB_TITLE` (F=0.81) and `COMPANY` (F=0.28) entities in job posting text. It acts as a fallback when structured extraction (JSON-LD / title-line regex / LLM) does not find a value.
 
 To retrain after adding annotations to `corpus/annotations.json`:
 

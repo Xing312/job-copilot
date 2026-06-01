@@ -15,7 +15,7 @@ from pathlib import Path
 
 import spacy
 from spacy.training import Example
-from spacy.util import minibatch, compounding
+from spacy.util import compounding, minibatch
 
 CORPUS_DIR = Path(__file__).parent
 ANNOTATIONS_PATH = CORPUS_DIR / "annotations.json"

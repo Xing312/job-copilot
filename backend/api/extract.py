@@ -8,6 +8,7 @@ from services.extractor import (
     fetch_jsonld,
     fetch_text_from_url,
 )
+from services.llm_extractor import extract_fields_llm
 
 router = APIRouter()
 
@@ -54,7 +55,8 @@ def extract(payload: ExtractRequest):
         platform = None
         source_url = None
 
-    fields = extract_fields(text)
+    # 3. Try LLM extraction (Groq); fall back to regex/spaCy if unavailable
+    fields = extract_fields_llm(text) or extract_fields(text)
     fields["platform"] = fields.get("platform") or platform
     fields["source_url"] = source_url
 
