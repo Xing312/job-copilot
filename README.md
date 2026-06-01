@@ -121,7 +121,3 @@ make restart
 ## License
 
 MIT © [Xing312](https://github.com/Xing312)
-
-## License
-
-MIT © [Xing312](https://github.com/Xing312)
