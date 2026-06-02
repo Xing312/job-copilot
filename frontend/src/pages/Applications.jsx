@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getApplications, updateStatus } from '../api/applications'
+import { getApplications, updateStatus, togglePin } from '../api/applications'
 
 const STATUS_COLORS = {
   Applied:       'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -20,6 +20,7 @@ export default function Applications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updating, setUpdating] = useState(null)
+  const [pinning, setPinning] = useState(null)
 
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -35,6 +36,18 @@ export default function Applications() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [])
+
+  async function handleTogglePin(id) {
+    setPinning(id)
+    try {
+      const updated = await togglePin(id)
+      setApps((prev) => prev.map((a) => (a.id === id ? updated : a)))
+    } catch {
+      // ignore
+    } finally {
+      setPinning(null)
+    }
+  }
 
   async function handleStatusChange(id, newStatus) {
     setUpdating(id)
@@ -74,6 +87,8 @@ export default function Applications() {
     if (filterWorkType) result = result.filter((a) => a.work_type === filterWorkType)
 
     return [...result].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1
+      if (!a.pinned && b.pinned) return 1
       const av = a[sortKey] ?? ''
       const bv = b[sortKey] ?? ''
       if (!av && bv) return 1
@@ -157,6 +172,7 @@ export default function Applications() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
             <tr>
+              <th className="px-3 py-3 w-8"></th>
               <th className="text-left px-4 py-3 font-medium"><SortBtn col="company">Company</SortBtn></th>
               <th className="text-left px-4 py-3 font-medium"><SortBtn col="title">Title</SortBtn></th>
               <th className="text-left px-4 py-3 font-medium"><SortBtn col="work_type">Work Type</SortBtn></th>
@@ -168,13 +184,23 @@ export default function Applications() {
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
+                <td colSpan={7} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
                   No results match your search or filters.
                 </td>
               </tr>
             ) : (
               filtered.map((app) => (
-                <tr key={app.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer">
+                <tr key={app.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer${app.pinned ? ' border-l-2 border-indigo-400' : ''}`}>
+                  <td className="px-3 py-3 text-center">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleTogglePin(app.id) }}
+                      disabled={pinning === app.id}
+                      title={app.pinned ? 'Unpin' : 'Pin to top'}
+                      className={`text-base leading-none transition-opacity disabled:opacity-30 ${app.pinned ? 'opacity-100' : 'opacity-20 hover:opacity-60'}`}
+                    >
+                      📌
+                    </button>
+                  </td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100" onClick={() => navigate(`/applications/${app.id}`)}>{app.company}</td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300" onClick={() => navigate(`/applications/${app.id}`)}>{app.title}</td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400" onClick={() => navigate(`/applications/${app.id}`)}>{app.work_type || '—'}</td>

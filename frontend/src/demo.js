@@ -12,37 +12,37 @@ const DEMO_APPS_SEED = [
   {
     id: 1, company: 'Anthropic', title: 'Research Engineer, Interpretability',
     location: 'San Francisco, CA', salary_min: 180000, salary_max: 250000,
-    work_type: 'Hybrid', platform: 'Greenhouse', status: 'Interview',
+    work_type: 'Hybrid', platform: 'Greenhouse', status: 'Interview', pinned: false,
     applied_date: '2026-05-10', source_url: null, created_at: '2026-05-10T10:00:00',
   },
   {
     id: 2, company: 'Waymo', title: 'Data Scientist, Perception',
     location: 'Mountain View, CA', salary_min: 160000, salary_max: 220000,
-    work_type: 'Onsite', platform: 'LinkedIn', status: 'Phone Screen',
+    work_type: 'Onsite', platform: 'LinkedIn', status: 'Phone Screen', pinned: false,
     applied_date: '2026-05-08', source_url: null, created_at: '2026-05-08T10:00:00',
   },
   {
     id: 3, company: 'Stripe', title: 'Machine Learning Engineer',
     location: 'Remote', salary_min: 170000, salary_max: 230000,
-    work_type: 'Remote', platform: 'Company Site', status: 'OA',
+    work_type: 'Remote', platform: 'Company Site', status: 'OA', pinned: false,
     applied_date: '2026-05-05', source_url: null, created_at: '2026-05-05T10:00:00',
   },
   {
     id: 4, company: 'Duolingo', title: 'Senior Data Scientist',
     location: 'Pittsburgh, PA', salary_min: 150000, salary_max: 200000,
-    work_type: 'Hybrid', platform: 'Greenhouse', status: 'Applied',
+    work_type: 'Hybrid', platform: 'Greenhouse', status: 'Applied', pinned: false,
     applied_date: '2026-05-14', source_url: null, created_at: '2026-05-14T10:00:00',
   },
   {
     id: 5, company: 'Netflix', title: 'Data Scientist, Recommendations',
     location: 'Los Gatos, CA', salary_min: 200000, salary_max: 300000,
-    work_type: 'Onsite', platform: 'Lever', status: 'Rejected',
+    work_type: 'Onsite', platform: 'Lever', status: 'Rejected', pinned: false,
     applied_date: '2026-04-28', source_url: null, created_at: '2026-04-28T10:00:00',
   },
   {
     id: 6, company: 'Notion', title: 'ML Engineer, Search',
     location: 'San Francisco, CA', salary_min: 160000, salary_max: 210000,
-    work_type: 'Hybrid', platform: 'Ashby', status: 'Ghosted',
+    work_type: 'Hybrid', platform: 'Ashby', status: 'Ghosted', pinned: false,
     applied_date: '2026-04-20', source_url: null, created_at: '2026-04-20T10:00:00',
   },
 ]
@@ -89,6 +89,15 @@ export function updateDemoStatus(id, status) {
 
 export function deleteDemoApp(id) {
   saveDemoApps(getDemoApps().filter((a) => a.id !== id))
+}
+
+export function toggleDemoPin(id) {
+  const apps = getDemoApps()
+  const app = apps.find((a) => a.id === id)
+  if (!app) return null
+  const updated = { ...app, pinned: !app.pinned, updated_at: new Date().toISOString() }
+  saveDemoApps(apps.map((a) => (a.id === id ? updated : a)))
+  return updated
 }
 
 // ── Stats calculation ──────────────────────────────────────────────────────

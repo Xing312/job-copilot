@@ -6,17 +6,24 @@ const WORK_TYPES = ['Remote', 'Hybrid', 'Onsite']
 const PLATFORMS = ['LinkedIn', 'Greenhouse', 'Lever', 'Workday', 'Company Site', 'Indeed', 'Other']
 const STATUSES = ['Applied', 'OA', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Ghosted']
 
-const emptyForm = {
-  company: '',
-  title: '',
-  location: '',
-  salary_min: '',
-  salary_max: '',
-  work_type: '',
-  platform: '',
-  source_url: '',
-  applied_date: new Date().toISOString().slice(0, 10),
-  status: 'Applied',
+function todayLocal() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function getEmptyForm() {
+  return {
+    company: '',
+    title: '',
+    location: '',
+    salary_min: '',
+    salary_max: '',
+    work_type: '',
+    platform: '',
+    source_url: '',
+    applied_date: todayLocal(),
+    status: 'Applied',
+  }
 }
 
 function Field({ label, children, required }) {
@@ -34,7 +41,7 @@ const inputClass =
   'w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
 
 export default function AddApplication() {
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(getEmptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
@@ -113,7 +120,7 @@ export default function AddApplication() {
         <p className="text-gray-500 dark:text-gray-400 mb-6">{form.title} @ {form.company}</p>
         <div className="flex justify-center gap-3">
           <button
-            onClick={() => { setForm(emptyForm); setPasteInput(''); setFilledFields([]); setExtractError(null); setSuccess(false) }}
+            onClick={() => { setForm(getEmptyForm()); setPasteInput(''); setFilledFields([]); setExtractError(null); setSuccess(false) }}
             className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-700"
           >
             Add another

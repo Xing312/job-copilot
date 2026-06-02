@@ -2,7 +2,7 @@ import { getToken, clearToken } from '../auth'
 import {
   isDemoMode,
   getDemoApps, addDemoApp, updateDemoApp, updateDemoStatus, deleteDemoApp,
-  calcDemoStats,
+  toggleDemoPin, calcDemoStats,
 } from '../demo'
 
 const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000') + '/api'
@@ -71,6 +71,13 @@ export async function updateApplication(id, data) {
     method: 'PUT', body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error('Failed to update application')
+  return res.json()
+}
+
+export async function togglePin(id) {
+  if (isDemoMode()) return toggleDemoPin(id)
+  const res = await request(`${BASE}/applications/${id}/pin`, { method: 'PATCH' })
+  if (!res.ok) throw new Error('Failed to toggle pin')
   return res.json()
 }
 

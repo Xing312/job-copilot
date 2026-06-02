@@ -38,6 +38,7 @@ class ApplicationOut(BaseModel):
     source_url: str | None
     applied_date: date | None
     status: str
+    pinned: bool
     created_at: datetime | None
     updated_at: datetime | None
 
@@ -90,6 +91,17 @@ def update_application(app_id: int, payload: ApplicationCreate, db: Session = De
         raise HTTPException(status_code=404, detail="Application not found")
     for field, value in payload.model_dump().items():
         setattr(app, field, value)
+    db.commit()
+    db.refresh(app)
+    return app
+
+
+@router.patch("/applications/{app_id}/pin", response_model=ApplicationOut)
+def toggle_pin(app_id: int, db: Session = Depends(get_db)):
+    app = db.get(Application, app_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    app.pinned = not app.pinned
     db.commit()
     db.refresh(app)
     return app
