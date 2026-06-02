@@ -58,13 +58,21 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
   )
 }
 
+const PERIOD_CONFIG = {
+  day:   { label: 'Day',   title: 'Applications per Day (last 30 days)',    interval: 4 },
+  week:  { label: 'Week',  title: 'Applications per Week (last 12 weeks)',   interval: 1 },
+  month: { label: 'Month', title: 'Applications per Month (last 12 months)', interval: 0 },
+}
+
 export default function Dashboard() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
+  const [period, setPeriod] = useState('day')
 
   useEffect(() => {
-    getStats().then(setData).catch((e) => setError(e.message))
-  }, [])
+    setData(null)
+    getStats(period).then(setData).catch((e) => setError(e.message))
+  }, [period])
 
   if (error) return <p className="p-8 text-red-600">{error}</p>
   if (!data) return <p className="p-8 text-gray-400 dark:text-gray-500">Loading…</p>
@@ -114,17 +122,37 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Applications per Week (last 12 weeks)">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              {PERIOD_CONFIG[period].title}
+            </p>
+            <div className="flex gap-1">
+              {Object.entries(PERIOD_CONFIG).map(([key, cfg]) => (
+                <button
+                  key={key}
+                  onClick={() => setPeriod(key)}
+                  className={`px-2.5 py-0.5 text-xs rounded font-medium transition-colors ${
+                    period === key
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {cfg.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={data.by_week} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
+            <BarChart data={data.by_period} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} />
-              <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'currentColor' }} interval={1} />
+              <XAxis dataKey="period" tick={{ fontSize: 11, fill: 'currentColor' }} interval={PERIOD_CONFIG[period].interval} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'currentColor' }} />
               <Tooltip contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', border: '1px solid #e5e7eb', borderRadius: 8 }} />
               <Bar dataKey="count" name="Applications" fill="#6366f1" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </ChartCard>
+        </div>
       </div>
 
       {/* Platform + Work type */}

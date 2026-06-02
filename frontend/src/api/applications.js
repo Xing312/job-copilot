@@ -103,9 +103,9 @@ export async function extractFromText(text) {
   return res.json()
 }
 
-export async function getStats() {
-  if (isDemoMode()) return calcDemoStats()
-  const res = await request(`${BASE}/stats`)
+export async function getStats(period = 'day') {
+  if (isDemoMode()) return calcDemoStats(period)
+  const res = await request(`${BASE}/stats?period=${period}`)
   if (!res.ok) throw new Error('Failed to fetch stats')
   return res.json()
 }

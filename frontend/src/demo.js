@@ -104,46 +104,73 @@ export function toggleDemoPin(id) {
 
 const STATUS_ORDER = ['Applied', 'OA', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Ghosted']
 
-function weekMonday(date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
-  return d
+function weekMonday(d) {
+  const r = new Date(d)
+  r.setHours(0, 0, 0, 0)
+  r.setDate(r.getDate() - ((r.getDay() + 6) % 7))
+  return r
 }
 
-function fmtWeek(date) {
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${m}/${d}`
+function fmtMD(d) {
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function calcDemoStats() {
+const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+function fmtMonth(d) {
+  return `${MONTH_ABBR[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`
+}
+
+function localDate(str) {
+  // Parse "YYYY-MM-DD" as local midnight to avoid UTC offset shifting the day
+  return str ? new Date(str + 'T00:00:00') : null
+}
+
+export function calcDemoStats(period = 'day') {
   const apps = getDemoApps()
   const total = apps.length
 
   const statusCount = {}
   const platformCount = {}
   const workCount = {}
-  const weekCount = {}
+  const periodCount = {}
 
   for (const a of apps) {
     statusCount[a.status] = (statusCount[a.status] || 0) + 1
     if (a.platform) platformCount[a.platform] = (platformCount[a.platform] || 0) + 1
     if (a.work_type) workCount[a.work_type] = (workCount[a.work_type] || 0) + 1
-    const d = a.applied_date ? new Date(a.applied_date) : a.created_at ? new Date(a.created_at) : null
+    const d = localDate(a.applied_date) ?? (a.created_at ? new Date(a.created_at) : null)
     if (d) {
-      const key = fmtWeek(weekMonday(d))
-      weekCount[key] = (weekCount[key] || 0) + 1
+      let key
+      if (period === 'day') key = fmtMD(d)
+      else if (period === 'week') key = fmtMD(weekMonday(d))
+      else key = fmtMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+      periodCount[key] = (periodCount[key] || 0) + 1
     }
   }
 
   const today = new Date()
-  const by_week = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(d.getDate() - (11 - i) * 7)
-    const key = fmtWeek(weekMonday(d))
-    return { week: key, count: weekCount[key] || 0 }
-  })
+  let by_period
+  if (period === 'day') {
+    by_period = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(today)
+      d.setDate(d.getDate() - (29 - i))
+      const key = fmtMD(d)
+      return { period: key, count: periodCount[key] || 0 }
+    })
+  } else if (period === 'week') {
+    by_period = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(today)
+      d.setDate(d.getDate() - (11 - i) * 7)
+      const key = fmtMD(weekMonday(d))
+      return { period: key, count: periodCount[key] || 0 }
+    })
+  } else {
+    by_period = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - (11 - i), 1)
+      const key = fmtMonth(d)
+      return { period: key, count: periodCount[key] || 0 }
+    })
+  }
 
   const responded = apps.filter((a) => !['Applied', 'Ghosted'].includes(a.status)).length
 
@@ -153,7 +180,7 @@ export function calcDemoStats() {
     interviews: statusCount['Interview'] || 0,
     response_rate: total ? Math.round((responded / total) * 1000) / 10 : 0,
     by_status: STATUS_ORDER.filter((s) => statusCount[s]).map((s) => ({ name: s, value: statusCount[s] })),
-    by_week,
+    by_period,
     by_platform: Object.entries(platformCount).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value })),
     by_work_type: Object.entries(workCount).map(([name, value]) => ({ name, value })),
   }
