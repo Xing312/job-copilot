@@ -12,7 +12,7 @@ def test_stats_empty(client):
     assert data["interviews"] == 0
     assert data["response_rate"] == 0
     assert data["by_status"] == []
-    assert len(data["by_week"]) == 12
+    assert len(data["by_period"]) == 30
 
 
 def test_stats_totals(client):
@@ -68,6 +68,16 @@ def test_stats_by_work_type(client):
     assert by_work_type["Hybrid"] == 1
 
 
-def test_stats_by_week_always_12_entries(client):
+def test_stats_by_period_day_always_30_entries(client):
     _post(client, "X", "Y", applied_date="2026-05-01")
-    assert len(client.get("/api/stats").json()["by_week"]) == 12
+    assert len(client.get("/api/stats").json()["by_period"]) == 30
+
+
+def test_stats_by_period_week_always_12_entries(client):
+    _post(client, "X", "Y", applied_date="2026-05-01")
+    assert len(client.get("/api/stats?period=week").json()["by_period"]) == 12
+
+
+def test_stats_by_period_month_always_12_entries(client):
+    _post(client, "X", "Y", applied_date="2026-05-01")
+    assert len(client.get("/api/stats?period=month").json()["by_period"]) == 12
