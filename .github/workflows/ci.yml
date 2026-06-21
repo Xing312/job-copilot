@@ -25,6 +25,20 @@ jobs:
   backend:
     name: Backend checks
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: copilot
+          POSTGRES_PASSWORD: copilot
+          POSTGRES_DB: job_copilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,6 +54,11 @@ jobs:
         working-directory: backend
         run: ruff check .
       - run: python -m spacy download en_core_web_sm
+      - name: Verify migrations apply on Postgres
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://copilot:copilot@localhost:5432/job_copilot
+        run: alembic upgrade head
       - name: Run tests
         working-directory: backend
         run: pytest tests/ -v

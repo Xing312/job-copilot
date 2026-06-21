@@ -13,8 +13,6 @@ services:
           property: connectionString
       - key: FRONTEND_URL
         sync: false
-      - key: API_KEY
-        generateValue: true
       - key: PYTHONPATH
         value: /opt/render/project/src/backend
 
@@ -31,8 +29,10 @@ services:
     envVars:
       - key: VITE_API_URL
         sync: false
-      - key: VITE_API_KEY
-        sync: false
+      # Forces the public deployment into read-only demo mode: all writes stay in
+      # the visitor's browser (sessionStorage) and never reach the database.
+      - key: VITE_FORCE_DEMO
+        value: "true"
 
 databases:
   - name: job-copilot-db

@@ -49,3 +49,10 @@ websites.md
 # Training data with personal URLs
 scripts/training_candidates.json
 "Copy of JOB APPLICATION TEMPLATE*"
+
+# Windows convenience launchers (local only)
+start.bat
+stop.bat
+
+# One-off personal data migration script (Render -> local)
+scripts/import_from_render.sh
