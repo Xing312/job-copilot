@@ -5,12 +5,12 @@ services:
     region: oregon
     plan: free
     buildCommand: pip install -r backend/requirements.txt && python -m spacy download en_core_web_sm
-    startCommand: sh -c "cd backend && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port $PORT"
+    # The public demo is database-free: the frontend runs in forced demo mode and
+    # only ever calls /api/extract (stateless, no DB). So the backend is deployed
+    # as a pure extraction service with no database and no migration step. This
+    # keeps the deployment free forever (no expiring managed database to maintain).
+    startCommand: sh -c "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: job-copilot-db
-          property: connectionString
       - key: FRONTEND_URL
         sync: false
       - key: PYTHONPATH
@@ -33,9 +33,3 @@ services:
       # the visitor's browser (sessionStorage) and never reach the database.
       - key: VITE_FORCE_DEMO
         value: "true"
-
-databases:
-  - name: job-copilot-db
-    plan: free
-    databaseName: job_copilot
-    user: copilot
