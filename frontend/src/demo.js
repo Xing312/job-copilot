@@ -1,12 +1,12 @@
-export const DEMO_KEY = 'jc_demo'
+// Demo mode is enabled at BUILD time via the VITE_FORCE_DEMO=true env var, which
+// is set on the public Render deployment. When it is unset — e.g. a local
+// `git clone` + `make start` — the app runs in normal mode and talks to the real
+// backend and database. In demo mode every read/write uses seeded sample data in
+// sessionStorage and never reaches the backend, so the public demo is read-safe
+// and resets itself when the tab is closed.
 export const DEMO_STORE_KEY = 'jc_demo_apps'
 
-export const isDemoMode = () => localStorage.getItem(DEMO_KEY) === 'true'
-export const enterDemo = () => localStorage.setItem(DEMO_KEY, 'true')
-export const exitDemo = () => {
-  localStorage.removeItem(DEMO_KEY)
-  sessionStorage.removeItem(DEMO_STORE_KEY)
-}
+export const isDemoMode = () => import.meta.env.VITE_FORCE_DEMO === 'true'
 
 const DEMO_APPS_SEED = [
   {

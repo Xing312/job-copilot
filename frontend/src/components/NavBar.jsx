@@ -1,10 +1,8 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { clearToken } from '../auth'
-import { isDemoMode, exitDemo } from '../demo'
+import { NavLink } from 'react-router-dom'
+import { isDemoMode } from '../demo'
 import useTheme from '../useTheme'
 
 export default function NavBar() {
-  const navigate = useNavigate()
   const [dark, toggleTheme] = useTheme()
   const demo = isDemoMode()
 
@@ -15,29 +13,14 @@ export default function NavBar() {
         : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
     }`
 
-  function handleLogout() {
-    clearToken()
-    navigate('/login')
-  }
-
-  function handleExitDemo() {
-    exitDemo()
-    navigate('/login')
-  }
-
   return (
     <div>
       {demo && (
-        <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700 px-6 py-2 flex items-center justify-between text-sm">
+        <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700 px-6 py-2 text-sm">
           <span className="text-amber-800 dark:text-amber-300">
-            Demo mode — changes are temporary and reset on refresh. Sign in to save real data.
+            Demo mode — this is a public sample. Your changes stay in your browser
+            and are never saved to a server.
           </span>
-          <button
-            onClick={handleExitDemo}
-            className="ml-4 px-3 py-1 bg-amber-600 text-white rounded-md text-xs font-medium hover:bg-amber-700 whitespace-nowrap"
-          >
-            Sign In
-          </button>
         </div>
       )}
       <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center gap-4">
@@ -53,14 +36,6 @@ export default function NavBar() {
           >
             {dark ? '☀️' : '🌙'}
           </button>
-          {!demo && (
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              Log out
-            </button>
-          )}
         </div>
       </nav>
     </div>

@@ -1,4 +1,3 @@
-import { getToken, clearToken } from '../auth'
 import {
   isDemoMode,
   getDemoApps, addDemoApp, updateDemoApp, updateDemoStatus, deleteDemoApp,
@@ -7,32 +6,11 @@ import {
 
 const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000') + '/api'
 
-function authHeaders() {
-  const token = getToken()
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  }
-}
-
 async function request(url, options = {}) {
-  const res = await fetch(url, { ...options, headers: authHeaders() })
-  if (res.status === 401) {
-    clearToken()
-    window.location.href = '/login'
-    throw new Error('Session expired')
-  }
-  return res
-}
-
-export async function login(password) {
-  const res = await fetch(`${BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password }),
+  return fetch(url, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
   })
-  if (!res.ok) throw new Error('Invalid password')
-  return res.json()
 }
 
 export async function getApplications() {
