@@ -1,6 +1,9 @@
+import html
 import json
+import os
 import re
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import requests
 import spacy
@@ -136,13 +139,281 @@ def _parse_jobposting(data: dict) -> dict:
     return result
 
 
+def fetch_greenhouse(url: str) -> dict | None:
+    """Extract a Greenhouse-backed posting via the Greenhouse Board API.
+
+    Many career sites (e.g. fanduel.careers) are SPAs that embed Greenhouse and
+    carry a ``?gh_jid=<id>`` query param. JSON-LD and Jina both fail on these, but
+    the Board API returns clean structured fields. The board token is not in the
+    page URL, so we resolve it from the embed endpoint's redirect
+    (``/embed/job_app?token=<id>`` → ``...?for=<token>&token=<id>``)."""
+    jid = parse_qs(urlparse(url).query).get("gh_jid", [None])[0]
+    if not jid:
+        return None
+    try:
+        embed = requests.get(
+            "https://boards.greenhouse.io/embed/job_app",
+            params={"token": jid},
+            headers=_HTML_HEADERS, timeout=15, allow_redirects=True,
+        )
+        token = parse_qs(urlparse(embed.url).query).get("for", [None])[0]
+        if not token:
+            return None
+        api = requests.get(
+            f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{jid}",
+            headers={"Accept": "application/json"}, timeout=15,
+        )
+        api.raise_for_status()
+        data = api.json()
+    except Exception:
+        return None
+
+    result = {}
+    if title := data.get("title"):
+        result["title"] = str(title).strip()
+    if company := data.get("company_name"):
+        result["company"] = str(company).strip()
+    if loc := (data.get("location") or {}).get("name"):
+        result["location"] = str(loc).strip()
+
+    _fill_from_body(result, data.get("content"))
+
+    if not result.get("title"):
+        return None
+    result["platform"] = "Greenhouse"
+    return result
+
+
+def _strip_html(raw: str | None) -> str:
+    """Collapse an HTML fragment to plain text for regex/NER mining."""
+    return html.unescape(re.sub(r"<[^>]+>", " ", raw or ""))
+
+
+def _fill_from_body(result: dict, raw_body: str | None) -> None:
+    """Backfill location/salary/work_type from a JD text or HTML blob using the
+    shared regex/NER extractor, never overwriting clean values already in `result`."""
+    body = _strip_html(raw_body) if raw_body and "<" in raw_body else (raw_body or "")
+    if not body.strip():
+        return
+    extra = extract_fields(body)
+    for key in ("location", "salary_min", "salary_max", "work_type"):
+        if not result.get(key) and extra.get(key) is not None:
+            result[key] = extra[key]
+
+
+def _company_from_token(token: str) -> str:
+    """Best-effort company name from a URL slug (e.g. 'acme-corp' -> 'Acme Corp').
+    APIs that key on a board token rarely return the display name; the user can edit."""
+    return token.replace("-", " ").replace("_", " ").title()
+
+
+def _norm_work_type(value: str | None) -> str | None:
+    """Map a platform's free-form workplace value to our Remote/Hybrid/Onsite set."""
+    v = (value or "").lower()
+    if "hybrid" in v:
+        return "Hybrid"
+    if "remote" in v or "telecommute" in v:
+        return "Remote"
+    if "onsite" in v or "on-site" in v or "in office" in v or "in-office" in v:
+        return "Onsite"
+    return None
+
+
+def fetch_lever(url: str) -> dict | None:
+    """Lever posting via the public v0 API.
+
+    Public URL:  https://jobs.lever.co/{site}/{id}
+    API:         https://api.lever.co/v0/postings/{site}/{id}?mode=json
+    """
+    parsed = urlparse(url)
+    if "lever.co" not in parsed.netloc:
+        return None
+    segs = [s for s in parsed.path.split("/") if s]
+    if len(segs) < 2:
+        return None
+    site, job_id = segs[0], segs[1]
+    try:
+        resp = requests.get(
+            f"https://api.lever.co/v0/postings/{site}/{job_id}",
+            params={"mode": "json"}, headers={"Accept": "application/json"}, timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return None
+    if not isinstance(data, dict) or not data.get("text"):
+        return None
+
+    cats = data.get("categories") or {}
+    result = {
+        "title": str(data["text"]).strip(),
+        "company": _company_from_token(site),
+        "platform": "Lever",
+    }
+    if loc := cats.get("location"):
+        result["location"] = str(loc).strip()
+    if wt := _norm_work_type(data.get("workplaceType")):
+        result["work_type"] = wt
+    salary = data.get("salaryRange") or {}
+    if salary.get("min"):
+        result["salary_min"] = round(float(salary["min"]))
+    if salary.get("max"):
+        result["salary_max"] = round(float(salary["max"]))
+
+    _fill_from_body(result, data.get("description") or data.get("descriptionPlain"))
+    return result
+
+
+def fetch_ashby(url: str) -> dict | None:
+    """Ashby posting. The public job-board API returns every listed job; we filter
+    by the posting UUID from the URL.
+
+    Public URL:  https://jobs.ashbyhq.com/{org}/{uuid}
+    API:         https://api.ashbyhq.com/posting-api/job-board/{org}?includeCompensation=true
+    """
+    parsed = urlparse(url)
+    if "ashbyhq.com" not in parsed.netloc:
+        return None
+    segs = [s for s in parsed.path.split("/") if s]
+    if len(segs) < 2:
+        return None
+    org, job_id = segs[0], segs[1]
+    try:
+        resp = requests.get(
+            f"https://api.ashbyhq.com/posting-api/job-board/{org}",
+            params={"includeCompensation": "true"},
+            headers={"Accept": "application/json"}, timeout=15,
+        )
+        resp.raise_for_status()
+        jobs = resp.json().get("jobs", [])
+    except Exception:
+        return None
+
+    job = next((j for j in jobs if j.get("id") == job_id), None)
+    if not job or not job.get("title"):
+        return None
+
+    result = {
+        "title": str(job["title"]).strip(),
+        "company": _company_from_token(org),
+        "platform": "Ashby",
+    }
+    if loc := job.get("location"):
+        result["location"] = str(loc).strip()
+    if wt := _norm_work_type(job.get("workplaceType")):
+        result["work_type"] = wt
+    elif job.get("isRemote"):
+        result["work_type"] = "Remote"
+    # Compensation is a free-form summary string (e.g. "$120K – $150K"); the shared
+    # extractor parses USD ranges and safely ignores other currencies.
+    comp = job.get("compensation") or {}
+    _fill_from_body(result, comp.get("scrapeableCompensationSalarySummary")
+                    or comp.get("compensationTierSummary"))
+    return result
+
+
+def fetch_smartrecruiters(url: str) -> dict | None:
+    """SmartRecruiters posting via the public API.
+
+    Public URL:  https://jobs.smartrecruiters.com/{company}/{postingId}-{slug}
+    API:         https://api.smartrecruiters.com/v1/companies/{company}/postings/{postingId}
+    """
+    parsed = urlparse(url)
+    if "smartrecruiters.com" not in parsed.netloc:
+        return None
+    segs = [s for s in parsed.path.split("/") if s]
+    if len(segs) < 2:
+        return None
+    company = segs[0]
+    posting_id = segs[1].split("-")[0]  # leading numeric id; drop the slug tail
+    try:
+        resp = requests.get(
+            f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{posting_id}",
+            headers={"Accept": "application/json"}, timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return None
+    if not data.get("name"):
+        return None
+
+    result = {"title": str(data["name"]).strip(), "platform": "SmartRecruiters"}
+    if co := (data.get("company") or {}).get("name"):
+        result["company"] = str(co).strip()
+    loc = data.get("location") or {}
+    parts = [str(p).strip() for p in (loc.get("city"), loc.get("region")) if p]
+    if parts:
+        result["location"] = ", ".join(dict.fromkeys(parts))
+    if loc.get("remote"):
+        result["work_type"] = "Remote"
+
+    sections = (data.get("jobAd") or {}).get("sections") or {}
+    body = " ".join(
+        sec.get("text", "") for sec in sections.values() if isinstance(sec, dict)
+    )
+    _fill_from_body(result, body)
+    return result
+
+
+def fetch_workday(url: str) -> dict | None:
+    """Workday SPA posting via the internal CXS JSON API.
+
+    Public URL:  https://{tenant}.{dc}.myworkdayjobs.com/{lang}/{site}/job/{path}
+    CXS API:     https://{tenant}.{dc}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/job/{path}
+    The language segment (e.g. en-US) is optional; the tenant is the first subdomain
+    label and the site is the path segment immediately before `job`.
+    """
+    parsed = urlparse(url)
+    host = parsed.netloc
+    if "myworkdayjobs.com" not in host:
+        return None
+    tenant = host.split(".")[0]
+    segs = [s for s in parsed.path.split("/") if s]
+    if "job" not in segs:
+        return None
+    ji = segs.index("job")
+    if ji < 1:
+        return None
+    site = segs[ji - 1]
+    job_path = "/".join(segs[ji:])  # job/{location}/{title}_{reqId}
+    try:
+        resp = requests.get(
+            f"https://{host}/wday/cxs/{tenant}/{site}/{job_path}",
+            headers={"Accept": "application/json", **_HTML_HEADERS}, timeout=15,
+        )
+        resp.raise_for_status()
+        info = resp.json().get("jobPostingInfo", {})
+    except Exception:
+        return None
+    if not info.get("title"):
+        return None
+
+    # CXS omits the company name; the tenant slug is the best available proxy.
+    result = {
+        "title": str(info["title"]).strip(),
+        "company": _company_from_token(tenant),
+        "platform": "Workday",
+    }
+    if loc := info.get("location"):
+        result["location"] = str(loc).strip()
+
+    # Work type / salary aren't structured in CXS — mine them from the JD body.
+    _fill_from_body(result, info.get("jobDescription"))
+    return result
+
+
 def fetch_text_from_url(url: str) -> str:
     url = url.strip()
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
+    headers = {"Accept": "application/json"}
+    # Jina Reader now requires auth; a free key (jina.ai) lifts the 401/rate limit.
+    if key := os.getenv("JINA_API_KEY"):
+        headers["Authorization"] = f"Bearer {key}"
     resp = requests.get(
         f"https://r.jina.ai/{url}",
-        headers={"Accept": "application/json"},
+        headers=headers,
         timeout=20,
     )
     resp.raise_for_status()

@@ -6,6 +6,11 @@ const WORK_TYPES = ['Remote', 'Hybrid', 'Onsite']
 const PLATFORMS = ['LinkedIn', 'Greenhouse', 'Lever', 'Workday', 'Company Site', 'Indeed', 'Other']
 const STATUSES = ['Applied', 'OA', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Ghosted']
 
+// A known-good Greenhouse posting: extracts via the Greenhouse Board API path,
+// so the auto-fill demo works with no Jina/Groq key configured.
+const EXAMPLE_URL =
+  'https://www.fanduel.careers/jobs/fanduel/data-scientist/?gh_jid=7848571'
+
 function todayLocal() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -166,6 +171,15 @@ export default function AddApplication() {
             {extractError && <p className="text-xs text-red-600 dark:text-red-400">{extractError}</p>}
             {filledFields.length > 0 && (
               <p className="text-xs text-indigo-700 dark:text-indigo-400">Filled: {filledFields.join(', ')}</p>
+            )}
+            {!pasteInput.trim() && !extractError && filledFields.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setPasteInput(EXAMPLE_URL)}
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Try an example ↗
+              </button>
             )}
           </div>
           <button

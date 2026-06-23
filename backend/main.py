@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import models.application  # noqa: F401 — registers model with Base
-from api import applications, extract, stats
+from api import applications, extract, health, stats
 
 app = FastAPI(title="Job Copilot API")
 
@@ -26,4 +26,5 @@ app.add_middleware(
 
 app.include_router(applications.router, prefix="/api")
 app.include_router(extract.router, prefix="/api")
+app.include_router(health.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")

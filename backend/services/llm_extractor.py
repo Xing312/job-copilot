@@ -4,6 +4,23 @@ import os
 _GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 _MODEL = "llama-3.3-70b-versatile"
 
+# Import groq once at module load. A missing package is a deployment bug (groq is
+# a declared dependency in requirements.txt), not an optional downgrade — surface
+# it loudly here instead of silently falling back to regex on every request.
+try:
+    from groq import Groq
+except ImportError as e:
+    Groq = None
+    print(
+        f"WARNING: groq package not importable ({e}); LLM extraction disabled. "
+        "Rebuild the backend image: docker compose build backend"
+    )
+
+
+def groq_available() -> bool:
+    """True when LLM extraction can actually run (package installed AND key set)."""
+    return Groq is not None and bool(_GROQ_API_KEY)
+
 _SYSTEM_PROMPT = """\
 You are a job posting parser. Extract structured fields from the job posting text provided.
 Return ONLY a valid JSON object with these keys (omit any field you cannot determine):
@@ -24,12 +41,7 @@ Rules:
 
 def extract_fields_llm(text: str) -> dict | None:
     """Call Groq LLM to extract job fields. Returns None if unavailable or on any error."""
-    if not _GROQ_API_KEY:
-        return None
-
-    try:
-        from groq import Groq
-    except ImportError:
+    if not groq_available():
         return None
 
     try:
