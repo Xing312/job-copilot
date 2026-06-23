@@ -8,6 +8,14 @@ from urllib.parse import parse_qs, urlparse
 import requests
 import spacy
 
+# Optional: browser-less main-text extraction for server-rendered pages. A missing
+# package degrades gracefully (fetch_html_text returns None → Jina takes over).
+try:
+    import trafilatura
+except ImportError as e:
+    trafilatura = None
+    print(f"WARNING: trafilatura not importable ({e}); plain-HTML fallback disabled.")
+
 _CUSTOM_MODEL_PATH = Path("/app/corpus/job_copilot_ner")
 
 
@@ -401,6 +409,33 @@ def fetch_workday(url: str) -> dict | None:
     # Work type / salary aren't structured in CXS — mine them from the JD body.
     _fill_from_body(result, info.get("jobDescription"))
     return result
+
+
+def fetch_html_text(url: str) -> str | None:
+    """Free, browser-less fallback: fetch raw HTML and pull the main text with
+    trafilatura. Works on server-rendered pages; returns None for client-rendered
+    SPAs (empty HTML shells) so the pipeline falls through to Jina. This keeps the
+    metered Jina path reserved for pages that genuinely need JS rendering."""
+    if trafilatura is None:
+        return None
+    try:
+        resp = requests.get(url, headers=_HTML_HEADERS, timeout=15, allow_redirects=True)
+        resp.raise_for_status()
+    except Exception:
+        return None
+
+    text = trafilatura.extract(
+        resp.text, include_comments=False, include_tables=False, favor_recall=True,
+    )
+    # Too little text means a SPA shell — let Jina handle it.
+    if not text or len(text.strip()) < 200:
+        return None
+
+    # Prepend the page <title> so extract_fields can parse "TITLE at COMPANY".
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", resp.text, re.IGNORECASE | re.DOTALL)
+    title = html.unescape(title_match.group(1)).strip() if title_match else ""
+    prefix = f"Title: {title}\n" if title else ""
+    return prefix + text
 
 
 def fetch_text_from_url(url: str) -> str:

@@ -7,6 +7,7 @@ from services.extractor import (
     extract_fields,
     fetch_ashby,
     fetch_greenhouse,
+    fetch_html_text,
     fetch_jsonld,
     fetch_lever,
     fetch_smartrecruiters,
@@ -68,20 +69,24 @@ def extract(payload: ExtractRequest):
             fields["source_url"] = source_url
             return ExtractResponse(**fields)
 
-        # 3. Fall back to Jina + NLP
-        try:
-            text = fetch_text_from_url(payload.url)
-        except Exception as e:
-            detail = f"Failed to fetch URL: {e}"
-            if "401" in str(e):
-                detail += " (Jina Reader requires auth — set JINA_API_KEY)"
-            raise HTTPException(status_code=502, detail=detail)
+        # 3. Free browser-less main-text extraction (server-rendered pages)
+        text = fetch_html_text(payload.url)
+
+        # 4. Fall back to Jina Reader for JS-rendered SPAs (metered; needs a key)
+        if not text:
+            try:
+                text = fetch_text_from_url(payload.url)
+            except Exception as e:
+                detail = f"Failed to fetch URL: {e}"
+                if "401" in str(e):
+                    detail += " (Jina Reader requires auth — set JINA_API_KEY)"
+                raise HTTPException(status_code=502, detail=detail)
     else:
         text = payload.text
         platform = None
         source_url = None
 
-    # 4. Try LLM extraction (Groq); fall back to regex/spaCy if unavailable
+    # 5. Try LLM extraction (Groq); fall back to regex/spaCy if unavailable
     fields = extract_fields_llm(text) or extract_fields(text)
     fields["platform"] = fields.get("platform") or platform
     fields["source_url"] = source_url
